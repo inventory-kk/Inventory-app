@@ -1,0 +1,9 @@
+{
+  "name": "Inventory Management",
+  "short_name": "Inventory",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f5f7",
+  "theme_color": "#111827",
+  "lang": "id"
+}
