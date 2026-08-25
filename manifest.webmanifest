@@ -1,9 +1,11 @@
 {
-  "name": "Inventory Management",
-  "short_name": "Inventory",
-  "start_url": "./",
+  "name": "Inventory Management & Daily SO",
+  "short_name": "Inventory KK",
+  "description": "Aplikasi manajemen inventaris dan Daily SO untuk barista",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#f4f5f7",
-  "theme_color": "#111827",
-  "lang": "id"
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": []
 }
