@@ -1,273 +1,31 @@
-/**
- * Inventory Management Database Layer
- * IndexedDB wrapper for items, batches, transactions, SO, openings, draft orders
- */
-
 class InventoryDB {
-    constructor() {
-        this.dbName = 'InventoryApp';
-        this.dbVersion = 3;
-        this.db = null;
-    }
-
-    /**
-     * Initialize IndexedDB with all required object stores
-     */
-    async init() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, this.dbVersion);
-
-            request.onupgradeneeded = (event) => {
-                const db = event.target.result;
-
-                // Items store
-                if (!db.objectStoreNames.contains('items')) {
-                    const store = db.createObjectStore('items', { keyPath: 'id', autoIncrement: true });
-                    store.createIndex('category', 'category', { unique: false });
-                    store.createIndex('sku', 'sku', { unique: false });
-                }
-
-                // Batches store
-                if (!db.objectStoreNames.contains('batches')) {
-                    const store = db.createObjectStore('batches', { keyPath: 'id', autoIncrement: true });
-                    store.createIndex('itemId', 'itemId', { unique: false });
-                    store.createIndex('expireDate', 'expireDate', { unique: false });
-                }
-
-                // Transactions store (IN/OUT)
-                if (!db.objectStoreNames.contains('transactions')) {
-                    const store = db.createObjectStore('transactions', { keyPath: 'id', autoIncrement: true });
-                    store.createIndex('itemId', 'itemId', { unique: false });
-                    store.createIndex('type', 'type', { unique: false });
-                    store.createIndex('date', 'date', { unique: false });
-                }
-
-                // Daily SO store
-                if (!db.objectStoreNames.contains('daily_so')) {
-                    const store = db.createObjectStore('daily_so', { keyPath: 'id', autoIncrement: true });
-                    store.createIndex('itemId', 'itemId', { unique: false });
-                    store.createIndex('date', 'date', { unique: false });
-                }
-
-                // Opening stock store
-                if (!db.objectStoreNames.contains('openings')) {
-                    db.createObjectStore('openings', { keyPath: 'itemId' });
-                }
-
-                // Draft orders store
-                if (!db.objectStoreNames.contains('draft_orders')) {
-                    db.createObjectStore('draft_orders', { keyPath: 'id', autoIncrement: true });
-                }
-            };
-
-            request.onsuccess = (event) => {
-                this.db = event.target.result;
-                console.log('✅ Database initialized successfully');
-                resolve();
-            };
-
-            request.onerror = (event) => {
-                console.error('❌ Database error:', event.target.error);
-                reject(event.target.error);
-            };
-        });
-    }
-
-    // ===== ITEMS =====
-    async getItems() {
-        return this._getAll('items');
-    }
-
-    async getItem(id) {
-        return this._get('items', id);
-    }
-
-    async saveItem(item) {
-        if (!item.name || !item.name.trim()) throw new Error('Item name required');
-        if (!item.uomBesar || !item.uomKecil) throw new Error('UOM required');
-        if (!item.konversi || item.konversi < 1) throw new Error('Conversion factor must be >= 1');
-        return this._put('items', item);
-    }
-
-    async deleteItem(id) {
-        return this._delete('items', id);
-    }
-
-    async getItemsByCategory(category) {
-        return this._getAllByIndex('items', 'category', category);
-    }
-
-    // ===== BATCHES =====
-    async getBatches(itemId = null) {
-        return itemId ? this._getAllByIndex('batches', 'itemId', itemId) : this._getAll('batches');
-    }
-
-    async saveBatch(batch) {
-        if (!batch.itemId || !batch.expireDate || batch.qty === undefined) {
-            throw new Error('Invalid batch data');
-        }
-        if (batch.qty < 0) throw new Error('Batch quantity cannot be negative');
-        return this._put('batches', batch);
-    }
-
-    async deleteBatch(id) {
-        return this._delete('batches', id);
-    }
-
-    // ===== TRANSACTIONS =====
-    async getTransactions(type = null) {
-        return type ? this._getAllByIndex('transactions', 'type', type) : this._getAll('transactions');
-    }
-
-    async saveTransaction(tx) {
-        if (!tx.itemId || tx.qty === undefined || !tx.type) {
-            throw new Error('Invalid transaction data');
-        }
-        if (tx.qty < 0) throw new Error('Transaction quantity cannot be negative');
-        if (!['IN', 'OUT'].includes(tx.type)) throw new Error('Invalid transaction type');
-        return this._put('transactions', tx);
-    }
-
-    async deleteTransaction(id) {
-        return this._delete('transactions', id);
-    }
-
-    // ===== DAILY SO =====
-    async getSO(date = null) {
-        return date ? this._getAllByIndex('daily_so', 'date', date) : this._getAll('daily_so');
-    }
-
-    async saveSO(so) {
-        if (!so.itemId || so.physicalStock === undefined || !so.date) {
-            throw new Error('Invalid SO data');
-        }
-        if (so.physicalStock < 0) throw new Error('Physical stock cannot be negative');
-        return this._put('daily_so', so);
-    }
-
-    async deleteSO(id) {
-        return this._delete('daily_so', id);
-    }
-
-    // ===== OPENINGS =====
-    async getOpenings() {
-        return this._getAll('openings');
-    }
-
-    async getOpening(itemId) {
-        return this._get('openings', itemId);
-    }
-
-    async saveOpening(opening) {
-        if (opening.qty === undefined) throw new Error('Opening qty required');
-        if (opening.qty < 0) throw new Error('Opening qty cannot be negative');
-        return this._put('openings', opening);
-    }
-
-    async deleteOpening(itemId) {
-        return this._delete('openings', itemId);
-    }
-
-    // ===== DRAFT ORDERS =====
-    async getDraftOrders() {
-        return this._getAll('draft_orders');
-    }
-
-    async saveDraftOrder(order) {
-        if (!order.itemId || order.qty === undefined) throw new Error('Invalid draft order');
-        if (order.qty <= 0) throw new Error('Draft order quantity must be > 0');
-        return this._put('draft_orders', order);
-    }
-
-    async deleteDraftOrder(id) {
-        return this._delete('draft_orders', id);
-    }
-
-    // ===== HELPER METHODS =====
-    _getAll(storeName) {
-        return new Promise((resolve, reject) => {
-            try {
-                const tx = this.db.transaction(storeName, 'readonly');
-                const request = tx.objectStore(storeName).getAll();
-
-                request.onsuccess = () => resolve(request.result || []);
-                request.onerror = () => reject(request.error);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    _get(storeName, key) {
-        return new Promise((resolve, reject) => {
-            try {
-                const tx = this.db.transaction(storeName, 'readonly');
-                const request = tx.objectStore(storeName).get(key);
-
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    _put(storeName, data) {
-        return new Promise((resolve, reject) => {
-            try {
-                const tx = this.db.transaction(storeName, 'readwrite');
-                const request = tx.objectStore(storeName).put(data);
-
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    _delete(storeName, key) {
-        return new Promise((resolve, reject) => {
-            try {
-                const tx = this.db.transaction(storeName, 'readwrite');
-                const request = tx.objectStore(storeName).delete(key);
-
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
-
-    _getAllByIndex(storeName, indexName, value) {
-        return new Promise((resolve, reject) => {
-            try {
-                const tx = this.db.transaction(storeName, 'readonly');
-                const request = tx.objectStore(storeName).index(indexName).getAll(value);
-
-                request.onsuccess = () => resolve(request.result || []);
-                request.onerror = () => reject(request.error);
-            } catch (error) {
-                reject(error);
-            }
-        });
-    }
+  constructor(){this.dbName='InventoryApp';this.dbVersion=3;this.db=null;}
+  async init(){if(this.db)return true;return new Promise((resolve,reject)=>{
+    const r=indexedDB.open(this.dbName,this.dbVersion);
+    r.onupgradeneeded=e=>{const db=e.target.result;
+      const add=(n,k,idx=[])=>{if(!db.objectStoreNames.contains(n)){const s=db.createObjectStore(n,{keyPath:k});idx.forEach(([a,b])=>s.createIndex(a,b,{unique:false}));}};
+      add('items','id',[['category','category'],['sku','sku']]);
+      add('batches','id',[['itemId','itemId'],['expireDate','expireDate']]);
+      add('transactions','id',[['itemId','itemId'],['type','type'],['date','date']]);
+      add('daily_so','id',[['itemId','itemId'],['date','date']]);
+      add('openings','itemId'); add('draft_orders','id');
+    };
+    r.onsuccess=e=>{this.db=e.target.result;this.db.onversionchange=()=>this.db.close();resolve(true);};
+    r.onerror=()=>reject(r.error);
+  });}
+  _all(n){return new Promise((res,rej)=>{const r=this.db.transaction(n,'readonly').objectStore(n).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});}
+  _get(n,k){return new Promise((res,rej)=>{const r=this.db.transaction(n,'readonly').objectStore(n).get(k);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+  _put(n,d){return new Promise((res,rej)=>{const t=this.db.transaction(n,'readwrite'),r=t.objectStore(n).put(d);t.oncomplete=()=>res(r.result);t.onerror=()=>rej(t.error||r.error);});}
+  _del(n,k){return new Promise((res,rej)=>{const t=this.db.transaction(n,'readwrite'),r=t.objectStore(n).delete(k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error||r.error);});}
+  _idx(n,i,v){return new Promise((res,rej)=>{const r=this.db.transaction(n,'readonly').objectStore(n).index(i).getAll(v);r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});}
+  getItems(){return this._all('items')} getItem(id){return this._get('items',id)} saveItem(x){return this._put('items',x)} deleteItem(id){return this._del('items',id)}
+  getItemsByCategory(x){return this._idx('items','category',x)}
+  getBatches(id=null){return id==null?this._all('batches'):this._idx('batches','itemId',id)} saveBatch(x){return this._put('batches',x)} deleteBatch(id){return this._del('batches',id)}
+  getTransactions(type=null){return type==null?this._all('transactions'):this._idx('transactions','type',type)} saveTransaction(x){return this._put('transactions',x)} deleteTransaction(id){return this._del('transactions',id)}
+  getSO(date=null){return date==null?this._all('daily_so'):this._idx('daily_so','date',date)} saveSO(x){return this._put('daily_so',x)} deleteSO(id){return this._del('daily_so',id)}
+  getOpenings(){return this._all('openings')} getOpening(id){return this._get('openings',id)} saveOpening(x){return this._put('openings',x)} deleteOpening(id){return this._del('openings',id)}
+  getDraftOrders(){return this._all('draft_orders')} saveDraftOrder(x){return this._put('draft_orders',x)} deleteDraftOrder(id){return this._del('draft_orders',id)}
+  async clearAll(){for(const n of ['items','batches','transactions','daily_so','openings','draft_orders'])for(const x of await this._all(n))await this._del(n,n==='openings'?x.itemId:x.id);}
 }
-
-// Global database instance
-const db = new InventoryDB();
-
-/**
- * Initialize database on app startup
- */
-async function initDB() {
-    try {
-        await db.init();
-        console.log('✅ Database ready');
-        return true;
-    } catch (error) {
-        console.error('❌ Database initialization error:', error);
-        return false;
-    }
-}
+const db=new InventoryDB();let dbReady=false;
+async function initDB(){try{await db.init();dbReady=true;return true}catch(e){console.error(e);return false;}}

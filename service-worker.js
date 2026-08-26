@@ -1,14 +1,11 @@
-const CACHE_NAME = 'inventory-app-v2';
-const urlsToCache = ['index.html','style.css','db.js','app.js','manifest.webmanifest'];
-
-self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
-});
-self.addEventListener('fetch', event => {
-    event.respondWith(caches.match(event.request).then(response => response || fetch(event.request)));
-});
-self.addEventListener('activate', event => {
-    event.waitUntil(caches.keys().then(cacheNames => Promise.all(
-        cacheNames.map(cacheName => cacheName !== CACHE_NAME ? caches.delete(cacheName) : undefined)
-    )));
+const CACHE_NAME='inventory-app-v3';
+const SHELL=['./','./index.html','./style.css','./db.js','./app.js','./manifest.webmanifest'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{
+ if(e.request.method!=='GET')return;
+ e.respondWith(caches.match(e.request).then(cached=>{
+   const net=fetch(e.request).then(r=>{if(r.ok&&new URL(e.request.url).origin===self.location.origin)caches.open(CACHE_NAME).then(c=>c.put(e.request,r.clone()));return r}).catch(()=>cached);
+   return cached||net;
+ }));
 });
