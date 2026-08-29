@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KK Inventory</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14110F">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">KK</span>
+      <span class="brand-text">Inventory</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="clock" class="clock"></span>
+    </div>
+  </header>
+
+  <!-- Alert strip -->
+  <div id="alertStrip" class="alert-strip hidden"></div>
+
+  <!-- Nav -->
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="dashboard">Ringkasan</button>
+    <button class="tab" data-tab="master">Master Barang</button>
+    <button class="tab" data-tab="gudang">Stok Gudang</button>
+    <button class="tab" data-tab="so">SO Harian (Bar)</button>
+    <button class="tab" data-tab="restock">Perlu Restock</button>
+    <button class="tab" data-tab="settings">Pengaturan</button>
+  </nav>
+
+  <main id="content"></main>
+
+</div>
+
+<!-- Modal root -->
+<div id="modalRoot"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
