@@ -241,3 +241,7 @@ table.simple td{padding:7px 8px;border-bottom:1px solid var(--line);font-family:
 @media(max-width:640px){
   .field-row{grid-template-columns:1fr;}
 }
+/* Styling identik dengan file style.css sebelumnya */
+/* Fokus pada pewarnaan badge baru jika dibutuhkan */
+.badge-total { font-weight: bold; color: var(--kk-red); font-size: 14px; }
+.stock-breakdown { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
