@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -10,7 +11,7 @@
     <div id="main-app" class="page">
         <header class="topbar">
             <div>
-                <span class="greeting">Hi, Manager</span>
+                <span class="greeting">Hi, Baperista Mongisidi</span>
                 <span class="role-badge">MANAGER</span>
             </div>
             <button class="btn-logout" onclick="app.resetSystem()">Reset</button>
@@ -19,23 +20,40 @@
         <main class="content">
             <!-- DASHBOARD -->
             <section id="view-dashboard" class="view">
-                <h2 class="section-title">Dashboard</h2>
+                <h2 class="section-title">Dasboard</h2>
                 <div id="expiry-warning-container"></div>
                 
                 <h3 class="category-title">RAW MATERIAL</h3>
                 <div id="dash-raw-material"></div>
                 
+                <h3 class="category-title mt-4">KITCHEN SUPPLIER</h3>
+                <div id="dash-kitchen"></div>
+
                 <h3 class="category-title mt-4">MERCHANDISE</h3>
                 <div id="dash-merchandise"></div>
 
-                <h3 class="category-title mt-4">KITCHEN SUPPLIER</h3>
-                <div id="dash-kitchen"></div>
+                <!-- PANEL MENU UTAMA SESUAI MOCKUP EXCEL -->
+                <div class="dashboard-action-panel">
+                    <div class="heart-so-btn" onclick="app.switchView('so')">
+                        <div class="kk-heart-logo">
+                            <div class="heart-shape"></div>
+                            <span class="so-text">SO</span>
+                        </div>
+                    </div>
+                    <div class="panel-button-grid">
+                        <button class="btn-panel btn-red" onclick="app.switchView('dashboard')">Dasboard</button>
+                        <button class="btn-panel btn-red" onclick="app.switchView('out')">OUT</button>
+                        <button class="btn-panel btn-red" onclick="app.switchView('in')">IN</button>
+                        <button class="btn-panel btn-red" onclick="app.openModal('modal-stock-awal')">Stock Awal</button>
+                        <button class="btn-panel btn-red" onclick="app.switchView('estimasi')">Estimasi Order</button>
+                        <button class="btn-panel btn-red" onclick="app.switchView('manager')">Manager</button>
+                    </div>
+                </div>
             </section>
 
             <!-- IN -->
             <section id="view-in" class="view" style="display: none;">
                 <h2 class="section-title">Barang Masuk (IN)</h2>
-                <p class="helper-text">Menambah stok Backroom dari Gudang/Vendor.</p>
                 <div class="action-buttons">
                     <button class="btn-primary" onclick="app.openModal('modal-in')">+ Barang Masuk</button>
                 </div>
@@ -46,7 +64,6 @@
             <!-- OUT -->
             <section id="view-out" class="view" style="display: none;">
                 <h2 class="section-title">Barang Keluar (OUT)</h2>
-                <p class="helper-text">Backroom ke Bar, Terjual (Merch), atau Terpakai (Kitchen Supplier). FEFO aktif.</p>
                 <div class="action-buttons">
                     <button class="btn-primary" onclick="app.openModal('modal-out')">+ Catat OUT</button>
                 </div>
@@ -56,19 +73,17 @@
 
             <!-- DAILY SO -->
             <section id="view-so" class="view" style="display: none;">
-                <h2 class="section-title">Daily SO</h2>
-                <p class="helper-text">Opname fisik Bar (Raw Material). Menjadi acuan stok akhir.</p>
+                <h2 class="section-title">Daily SO (Bar)</h2>
                 <div class="action-buttons">
-                    <button class="btn-primary btn-so" onclick="app.openModal('modal-so')">+ Input Daily SO (Bar)</button>
+                    <button class="btn-primary btn-so" onclick="app.openModal('modal-so')">+ Input Daily SO</button>
                 </div>
-                <h3>SO Terakhir (Bar)</h3>
+                <h3>SO Terakhir</h3>
                 <div class="history-list" id="history-so-list"></div>
             </section>
 
             <!-- ESTIMASI PENGORDERAN -->
             <section id="view-estimasi" class="view" style="display: none;">
                 <h2 class="section-title">Estimasi Pengorderan</h2>
-                <p class="helper-text">Aktual (Backroom + Bar) vs Sales 30 Hari & Lead Time.</p>
                 <div id="estimasi-list"></div>
             </section>
 
@@ -101,23 +116,21 @@
         <h3>Barang Masuk (Backroom)</h3>
         <select id="in-item" onchange="app.checkCategory('in')"></select>
         <input type="number" id="in-qty" placeholder="Qty Masuk">
-        <div id="in-batch-group" style="display: none;">
-            <input type="date" id="in-exp">
-        </div>
+        <div id="in-batch-group" style="display: none;"><input type="date" id="in-exp"></div>
         <div class="modal-actions">
             <button class="btn-outline" onclick="app.closeAllModals()">Batal</button>
-            <button class="btn-primary" onclick="app.submitIn()">Simpan IN</button>
+            <button class="btn-primary" onclick="app.submitIn()">Simpan</button>
         </div>
     </div>
 
     <div class="modal" id="modal-out" style="display: none;">
-        <h3>Barang Keluar (Backroom)</h3>
+        <h3>Barang Keluar</h3>
         <select id="out-item"></select>
         <input type="number" id="out-qty" placeholder="Qty Keluar">
         <input type="text" id="out-detail" placeholder="Detail (Cth: Ke Bar, Terjual, Terpakai)">
         <div class="modal-actions">
             <button class="btn-outline" onclick="app.closeAllModals()">Batal</button>
-            <button class="btn-primary" onclick="app.submitOut()">Simpan OUT</button>
+            <button class="btn-primary" onclick="app.submitOut()">Simpan</button>
         </div>
     </div>
 
@@ -127,7 +140,7 @@
         <input type="number" id="so-qty" placeholder="Qty Aktual Fisik Bar">
         <div class="modal-actions">
             <button class="btn-outline" onclick="app.closeAllModals()">Batal</button>
-            <button class="btn-primary" onclick="app.submitSo()">Simpan SO</button>
+            <button class="btn-primary" onclick="app.submitSo()">Simpan</button>
         </div>
     </div>
 
