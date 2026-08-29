@@ -1,3 +1,4 @@
+// app.js
 const app = {
     data: { items: [], inventory: {}, transactions: [], sales30: {} },
 
@@ -22,17 +23,17 @@ const app = {
             { id: 'RM1', name: 'KK Beef Floss - Original', category: 'Raw Material', uom: 'Gram', pic: 'Bar', buffer: 10 },
             { id: 'RM2', name: 'KK Fresh Milk', category: 'Raw Material', uom: 'ml', pic: 'Bar', buffer: 5 },
             { id: 'RM3', name: 'KK Oat Milk', category: 'Raw Material', uom: 'ml', pic: 'Bar', buffer: 5 },
-            { id: 'MC1', name: 'KK Merch Cup Hugger Bear', category: 'Merchandise', uom: 'pcs', pic: 'Cashier', price: 'Rp 35.000', buffer: 0 },
-            { id: 'KS1', name: 'KK Tissu Toilet', category: 'Kitchen Supplier', uom: 'Roll', pic: 'Bar', buffer: 10 }
+            { id: 'MC1', name: 'KK Merch Cup Hugger Bear', category: 'Merchandise', uom: 'pcs', pic: 'Cashier', price: 'Rp 35.000,-', buffer: 0 },
+            { id: 'KS1', name: 'KK Napkin', category: 'Kitchen Supplier', uom: 'Pac', pic: 'Bar', buffer: 10 }
         ];
         this.data.inventory = {
             'RM1': { backroomQty: 1500, barQty: 500, batches: [{ id: 'b1', qty: 1500, exp: '2026-10-30' }] },
             'RM2': { backroomQty: 2000, barQty: 1500, batches: [{ id: 'b2', qty: 2000, exp: '2026-09-05' }] },
             'RM3': { backroomQty: 1000, barQty: 0, batches: [{ id: 'b3', qty: 1000, exp: '2026-09-10' }] },
-            'MC1': { backroomQty: 5, barQty: 0, batches: [] },
-            'KS1': { backroomQty: 30, barQty: 0, batches: [] }
+            'MC1': { backroomQty: 0, barQty: 0, batches: [] },
+            'KS1': { backroomQty: 21, barQty: 0, batches: [] }
         };
-        this.data.sales30 = { 'RM1': 8000, 'RM2': 20000, 'RM3': 5000, 'MC1': 10, 'KS1': 50 };
+        this.data.sales30 = { 'RM1': 8000, 'RM2': 20000, 'RM3': 5000, 'MC1': 0, 'KS1': 30 };
         this.saveData();
     },
 
@@ -43,6 +44,7 @@ const app = {
         const navTarget = document.querySelector(`.nav-item[href="#${viewId}"]`);
         if(navTarget) navTarget.classList.add('active');
         this.renderAll();
+        window.scrollTo(0, 0);
     },
 
     renderAll() {
@@ -70,26 +72,40 @@ const app = {
                 inv.batches.sort((a, b) => new Date(a.exp) - new Date(b.exp));
                 inv.batches.forEach(b => {
                     const daysToExp = Math.ceil((new Date(b.exp) - new Date()) / (1000 * 60 * 60 * 24));
-                    batchesHtml += `<div>Exp ${b.exp} · Backroom: ${b.qty} ${item.uom}</div>`;
+                    batchesHtml += `<div class="expiry-line">Exp ${b.exp} · ${b.qty} ${item.uom}</div>`;
                     if (daysToExp <= 7 && b.qty > 0) {
-                        warningsHtml += `<div class="card warning-card"><div class="card-header">${item.name}</div><div class="card-body"><span class="warning-text">Exp ${b.exp} · ${daysToExp} hari lagi</span></div></div>`;
+                        warningsHtml += `
+                            <div class="card warning-card">
+                                <div class="card-top-row">
+                                    <div>
+                                        <div class="item-title">${item.name}</div>
+                                        <div class="warning-text">Exp ${b.exp} · ${daysToExp} hari lagi</div>
+                                    </div>
+                                </div>
+                            </div>`;
                     }
                 });
             }
 
-            const status = totalStock > 0 ? 'Available' : 'Habis';
+            const statusText = totalStock > 0 ? (totalStock <= 5 ? 'Cukup' : 'Available') : 'Habis';
+            const statusClass = totalStock > 0 ? 'bg-status-available' : 'bg-status-habis';
+
             const cardHtml = `
                 <div class="card">
-                    <div class="card-header">
-                        <span>${item.name}</span>
-                        <span class="badge-total">${totalStock} ${item.uom}</span>
+                    <div class="card-top-row">
+                        <div>
+                            <div class="item-title">${item.name}</div>
+                            ${item.category === 'Merchandise' ? `<div class="item-subtitle">${item.price || ''}</div>` : ''}
+                        </div>
+                        <div class="card-badges-right">
+                            <span class="badge-box bg-stock">${totalStock} ${item.uom}</span>
+                            <span class="badge-box ${statusClass}">${statusText}</span>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="stock-breakdown">Backroom: ${inv.backroomQty} | Bar: ${inv.barQty}</div>
-                        <div>Status: <strong>${status}</strong></div>
-                        ${item.category === 'Merchandise' ? `<div>Harga: ${item.price}</div>` : ''}
-                        ${batchesHtml ? `<div class="batch-list mt-4">${batchesHtml}</div>` : ''}
+                    <div class="stock-breakdown">
+                        Backroom: ${inv.backroomQty} | Bar: ${inv.barQty}
                     </div>
+                    ${batchesHtml ? `<div style="margin-top: 4px;">${batchesHtml}</div>` : ''}
                 </div>
             `;
 
@@ -98,7 +114,9 @@ const app = {
             else ksContainer.innerHTML += cardHtml;
         });
 
-        if (warningsHtml) warnContainer.innerHTML = `<h3 class="category-title warning-text">PERHATIAN EXPIRED</h3>` + warningsHtml;
+        if (warningsHtml) {
+            warnContainer.innerHTML = `<h3 class="category-title" style="color: #d97706;">PERHATIAN EXPIRED</h3>` + warningsHtml;
+        }
     },
 
     submitIn() {
@@ -193,11 +211,13 @@ const app = {
 
             estContainer.innerHTML += `
                 <div class="card">
-                    <div class="card-header">
-                        <span>${item.name}</span>
-                        <span class="badge-total">Order: ${orderQty} ${item.uom}</span>
+                    <div class="card-top-row">
+                        <div class="item-title">${item.name}</div>
+                        <div class="card-badges-right">
+                            <span class="badge-box bg-stock">Order: ${orderQty} ${item.uom}</span>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" style="font-size:12px; color:var(--text-muted); margin-top:6px;">
                         <div>PIC: <strong>${item.pic}</strong> | Siklus: <strong>${leadTime} Hari</strong></div>
                         <div class="stock-breakdown">Total Stok: ${totalStock} ${item.uom} (BR: ${inv.backroomQty} + Bar: ${inv.barQty})</div>
                         <div>Sales 30H: ${sales} ${item.uom}</div>
@@ -279,68 +299,3 @@ const app = {
 };
 
 window.onload = () => app.init();
-    renderDashboard() {
-        const rmContainer = document.getElementById('dash-raw-material');
-        const mcContainer = document.getElementById('dash-merchandise');
-        const ksContainer = document.getElementById('dash-kitchen');
-        const warnContainer = document.getElementById('expiry-warning-container');
-        
-        rmContainer.innerHTML = ''; mcContainer.innerHTML = ''; ksContainer.innerHTML = ''; warnContainer.innerHTML = '';
-        let warningsHtml = '';
-
-        this.data.items.forEach(item => {
-            const inv = this.data.inventory[item.id] || { backroomQty: 0, barQty: 0, batches: [] };
-            const totalStock = inv.backroomQty + inv.barQty;
-            
-            let batchesHtml = '';
-            if (item.category === 'Raw Material') {
-                inv.batches.sort((a, b) => new Date(a.exp) - new Date(b.exp));
-                inv.batches.forEach(b => {
-                    const daysToExp = Math.ceil((new Date(b.exp) - new Date()) / (1000 * 60 * 60 * 24));
-                    batchesHtml += `<div class="expiry-line">Exp ${b.exp} · ${b.qty} ${item.uom}</div>`;
-                    if (daysToExp <= 7 && b.qty > 0) {
-                        warningsHtml += `
-                            <div class="card warning-card">
-                                <div class="card-top-row">
-                                    <div>
-                                        <div class="item-title">${item.name}</div>
-                                        <div class="warning-text">Exp ${b.exp} · ${daysToExp} hari lagi</div>
-                                    </div>
-                                </div>
-                            </div>`;
-                    }
-                });
-            }
-
-            const statusText = totalStock > 0 ? 'Available' : 'Habis';
-            const statusClass = totalStock > 0 ? 'bg-status-available' : 'bg-status-habis';
-
-            const cardHtml = `
-                <div class="card">
-                    <div class="card-top-row">
-                        <div>
-                            <div class="item-title">${item.name}</div>
-                            ${item.category === 'Merchandise' ? `<div class="item-subtitle">${item.price || ''}</div>` : ''}
-                        </div>
-                        <div class="card-badges-right">
-                            <span class="badge-box bg-stock">${totalStock} ${item.uom}</span>
-                            <span class="badge-box ${statusClass}">${statusText}</span>
-                        </div>
-                    </div>
-                    <div class="stock-breakdown">
-                        Backroom: ${inv.backroomQty} | Bar: ${inv.barQty}
-                    </div>
-                    ${batchesHtml ? `<div style="margin-top: 4px;">${batchesHtml}</div>` : ''}
-                </div>
-            `;
-
-            if (item.category === 'Raw Material') rmContainer.innerHTML += cardHtml;
-            else if (item.category === 'Merchandise') mcContainer.innerHTML += cardHtml;
-            else ksContainer.innerHTML += cardHtml;
-        });
-
-        if (warningsHtml) {
-            warnContainer.innerHTML = `<h3 class="category-title" style="color: #d97706;">PERHATIAN EXPIRED</h3>` + warningsHtml;
-        }
-    },
-
