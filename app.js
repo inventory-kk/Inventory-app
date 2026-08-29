@@ -279,3 +279,68 @@ const app = {
 };
 
 window.onload = () => app.init();
+    renderDashboard() {
+        const rmContainer = document.getElementById('dash-raw-material');
+        const mcContainer = document.getElementById('dash-merchandise');
+        const ksContainer = document.getElementById('dash-kitchen');
+        const warnContainer = document.getElementById('expiry-warning-container');
+        
+        rmContainer.innerHTML = ''; mcContainer.innerHTML = ''; ksContainer.innerHTML = ''; warnContainer.innerHTML = '';
+        let warningsHtml = '';
+
+        this.data.items.forEach(item => {
+            const inv = this.data.inventory[item.id] || { backroomQty: 0, barQty: 0, batches: [] };
+            const totalStock = inv.backroomQty + inv.barQty;
+            
+            let batchesHtml = '';
+            if (item.category === 'Raw Material') {
+                inv.batches.sort((a, b) => new Date(a.exp) - new Date(b.exp));
+                inv.batches.forEach(b => {
+                    const daysToExp = Math.ceil((new Date(b.exp) - new Date()) / (1000 * 60 * 60 * 24));
+                    batchesHtml += `<div class="expiry-line">Exp ${b.exp} · ${b.qty} ${item.uom}</div>`;
+                    if (daysToExp <= 7 && b.qty > 0) {
+                        warningsHtml += `
+                            <div class="card warning-card">
+                                <div class="card-top-row">
+                                    <div>
+                                        <div class="item-title">${item.name}</div>
+                                        <div class="warning-text">Exp ${b.exp} · ${daysToExp} hari lagi</div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                });
+            }
+
+            const statusText = totalStock > 0 ? 'Available' : 'Habis';
+            const statusClass = totalStock > 0 ? 'bg-status-available' : 'bg-status-habis';
+
+            const cardHtml = `
+                <div class="card">
+                    <div class="card-top-row">
+                        <div>
+                            <div class="item-title">${item.name}</div>
+                            ${item.category === 'Merchandise' ? `<div class="item-subtitle">${item.price || ''}</div>` : ''}
+                        </div>
+                        <div class="card-badges-right">
+                            <span class="badge-box bg-stock">${totalStock} ${item.uom}</span>
+                            <span class="badge-box ${statusClass}">${statusText}</span>
+                        </div>
+                    </div>
+                    <div class="stock-breakdown">
+                        Backroom: ${inv.backroomQty} | Bar: ${inv.barQty}
+                    </div>
+                    ${batchesHtml ? `<div style="margin-top: 4px;">${batchesHtml}</div>` : ''}
+                </div>
+            `;
+
+            if (item.category === 'Raw Material') rmContainer.innerHTML += cardHtml;
+            else if (item.category === 'Merchandise') mcContainer.innerHTML += cardHtml;
+            else ksContainer.innerHTML += cardHtml;
+        });
+
+        if (warningsHtml) {
+            warnContainer.innerHTML = `<h3 class="category-title" style="color: #d97706;">PERHATIAN EXPIRED</h3>` + warningsHtml;
+        }
+    },
+
