@@ -13,22 +13,33 @@
 body { background-color: var(--bg-color); color: var(--text-main); font-size: 14px; padding-bottom: 70px; }
 
 h2 { font-size: 18px; margin-bottom: 12px; }
-h3 { font-size: 14px; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
-.mt-4 { margin-top: 16px; }
+h3 { font-size: 13px; margin-bottom: 8px; color: var(--kk-red); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+.mt-4 { margin-top: 20px; }
 .helper-text { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4; }
 
 .page { min-height: 100vh; }
-.topbar { background: var(--card-bg); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; }
+.topbar { background: var(--card-bg); padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 10; }
 .role-badge { font-size: 10px; background: var(--text-main); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 8px; }
 .content { padding: 16px; }
-.card { background: var(--card-bg); padding: 14px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); }
-.card-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-.card-body { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-.badge-total { font-weight: bold; color: var(--kk-red); font-size: 13px; }
-.stock-breakdown { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-.warning-card { border-left: 4px solid var(--warning); }
-.warning-text { color: var(--warning); font-weight: bold; }
+/* Desain Kartu Mirip Referensi Excel */
+.card { background: var(--card-bg); padding: 14px; border-radius: 12px; margin-bottom: 12px; border: 1.5px solid #f1d5d8; box-shadow: 0 2px 6px rgba(227, 24, 55, 0.04); }
+.card-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.item-title { font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 4px; }
+.item-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+/* Badge Kanan (Stock Akhir & Status) seperti di Excel */
+.card-badges-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.badge-box { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; color: white; text-align: center; min-width: 75px; }
+.bg-stock { background: var(--kk-red); }
+.bg-status-available { background: #10B981; }
+.bg-status-habis { background: #EF4444; }
+
+.stock-breakdown { font-size: 11px; color: var(--text-muted); border-top: 1px dashed var(--border-color); padding-top: 6px; margin-top: 6px; }
+.expiry-line { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.warning-card { border-left: 4px solid var(--warning); background: #fffdfa; }
+.warning-text { color: #d97706; font-weight: 600; font-size: 11px; }
 
 button { border: none; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
 .btn-primary { background: var(--kk-red); color: white; }
@@ -36,7 +47,7 @@ button { border: none; padding: 12px 16px; border-radius: 8px; font-size: 14px; 
 .action-buttons { margin-bottom: 16px; }
 select, input { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; background: white; }
 
-.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid var(--border-color); z-index: 100; }
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid var(--border-color); z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
 .nav-item { text-decoration: none; color: var(--text-muted); font-size: 10px; display: flex; flex-direction: column; align-items: center; font-weight: 600; }
 .nav-item.active { color: var(--kk-red); }
 .logo-kk-small { font-size: 18px; color: var(--kk-red); margin-bottom: -2px; }
