@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-        <!-- MODALS -->
-    <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,14 +7,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- MAIN APP -->
     <div id="main-app" class="page">
         <header class="topbar">
             <div>
-                <span class="greeting" id="user-greeting">Hi, Manager</span>
+                <span class="greeting">Hi, Manager</span>
                 <span class="role-badge">MANAGER</span>
             </div>
-            <button class="btn-logout" onclick="app.logout()">Keluar</button>
+            <button class="btn-logout" onclick="app.resetSystem()">Reset</button>
         </header>
 
         <main class="content">
@@ -50,7 +46,7 @@
             <!-- OUT -->
             <section id="view-out" class="view" style="display: none;">
                 <h2 class="section-title">Barang Keluar (OUT)</h2>
-                <p class="helper-text">Mengeluarkan barang dari Backroom (ke Bar, Terjual, atau Terpakai).</p>
+                <p class="helper-text">Backroom ke Bar, Terjual (Merch), atau Terpakai (Kitchen Supplier). FEFO aktif.</p>
                 <div class="action-buttons">
                     <button class="btn-primary" onclick="app.openModal('modal-out')">+ Catat OUT</button>
                 </div>
@@ -61,7 +57,7 @@
             <!-- DAILY SO -->
             <section id="view-so" class="view" style="display: none;">
                 <h2 class="section-title">Daily SO</h2>
-                <p class="helper-text">Menghitung fisik sisa barang di Bar.</p>
+                <p class="helper-text">Opname fisik Bar (Raw Material). Menjadi acuan stok akhir.</p>
                 <div class="action-buttons">
                     <button class="btn-primary btn-so" onclick="app.openModal('modal-so')">+ Input Daily SO (Bar)</button>
                 </div>
@@ -72,7 +68,7 @@
             <!-- ESTIMASI PENGORDERAN -->
             <section id="view-estimasi" class="view" style="display: none;">
                 <h2 class="section-title">Estimasi Pengorderan</h2>
-                <p class="helper-text">Total Aktual (Backroom + Bar) vs Sales 30 Hari.</p>
+                <p class="helper-text">Aktual (Backroom + Bar) vs Sales 30 Hari & Lead Time.</p>
                 <div id="estimasi-list"></div>
             </section>
 
@@ -83,7 +79,6 @@
                     <button class="btn-outline" onclick="app.openModal('modal-stock-awal')">Stock Awal (Baseline)</button>
                     <button class="btn-outline" onclick="app.openModal('modal-sales')">Update Sales 30 Hari</button>
                     <button class="btn-outline" onclick="app.exportData()">Export Data (JSON)</button>
-                    <button class="btn-danger" onclick="app.resetSystem()">Reset System</button>
                 </div>
             </section>
         </main>
@@ -107,399 +102,47 @@
         <select id="in-item" onchange="app.checkCategory('in')"></select>
         <input type="number" id="in-qty" placeholder="Qty Masuk">
         <div id="in-batch-group" style="display: none;">
-            <input type="date" id="in-exp" placeholder="Expiry Date">
+            <input type="date" id="in-exp">
         </div>
         <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-in')">Batal</button>
+            <button class="btn-outline" onclick="app.closeAllModals()">Batal</button>
             <button class="btn-primary" onclick="app.submitIn()">Simpan IN</button>
         </div>
     </div>
 
     <div class="modal" id="modal-out" style="display: none;">
-        <h3>Barang Keluar (Dari Backroom)</h3>
+        <h3>Barang Keluar (Backroom)</h3>
         <select id="out-item"></select>
         <input type="number" id="out-qty" placeholder="Qty Keluar">
         <input type="text" id="out-detail" placeholder="Detail (Cth: Ke Bar, Terjual, Terpakai)">
         <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-out')">Batal</button>
+            <button class="btn-outline" onclick="app.closeAllModals()">Batal</button>
             <button class="btn-primary" onclick="app.submitOut()">Simpan OUT</button>
         </div>
     </div>
 
     <div class="modal" id="modal-so" style="display: none;">
-        <h3>Input Daily SO (Sisa Bar)</h3>
+        <h3>Input Daily SO (Bar)</h3>
         <select id="so-item"></select>
-        <input type="number" id="so-qty" placeholder="Qty Aktual di Bar">
+        <input type="number" id="so-qty" placeholder="Qty Aktual Fisik Bar">
         <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-so')">Batal</button>
+            <button class="btn-outline" onclick="app.closeAllModals()">Batal</button>
             <button class="btn-primary" onclick="app.submitSo()">Simpan SO</button>
         </div>
     </div>
 
     <div class="modal" id="modal-stock-awal" style="display: none;">
         <h3>Stock Awal (Baseline)</h3>
-        <p class="helper-text">Fitur baseline backroom aktif. Gunakan tombol reset atau export/import data dari sistem.</p>
-        <div class="modal-actions">
-            <button class="btn-primary" onclick="app.closeModal('modal-stock-awal')">Tutup</button>
-        </div>
+        <p class="helper-text">Baseline Backroom aktif dan dikelola otomatis oleh sistem.</p>
+        <div class="modal-actions"><button class="btn-primary" onclick="app.closeAllModals()">Tutup</button></div>
     </div>
 
     <div class="modal" id="modal-sales" style="display: none;">
         <h3>Update Sales 30 Hari</h3>
-        <p class="helper-text">Pengaturan data penjualan harian dan buffer per item.</p>
-        <div class="modal-actions">
-            <button class="btn-primary" onclick="app.closeModal('modal-sales')">Tutup</button>
-        </div>
+        <p class="helper-text">Data penjualan dan buffer terhubung ke kalkulasi order.</p>
+        <div class="modal-actions"><button class="btn-primary" onclick="app.closeAllModals()">Tutup</button></div>
     </div>
 
     <script src="app.js"></script>
-</body>
-</html>
-            <section id="view-in" class="view" style="display: none;">
-                <h2 class="section-title">Barang Masuk (IN)</h2>
-                <p class="helper-text">Menambah stok Backroom dari Gudang/Vendor.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="app.openModal('modal-in')">+ Barang Masuk</button>
-                </div>
-                <h3>History IN</h3>
-                <div class="history-list" id="history-in-list"></div>
-            </section>
-
-            <!-- OUT -->
-            <section id="view-out" class="view" style="display: none;">
-                <h2 class="section-title">Barang Keluar (OUT)</h2>
-                <p class="helper-text">Mengeluarkan barang dari Backroom (ke Bar, Terjual, atau Terpakai).</p>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="app.openModal('modal-out')">+ Catat OUT</button>
-                </div>
-                <h3>History OUT</h3>
-                <div class="history-list" id="history-out-list"></div>
-            </section>
-
-            <!-- DAILY SO -->
-            <section id="view-so" class="view" style="display: none;">
-                <h2 class="section-title">Daily SO</h2>
-                <p class="helper-text">Menghitung fisik sisa barang di Bar.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary btn-so" onclick="app.openModal('modal-so')">+ Input Daily SO (Bar)</button>
-                </div>
-                <h3>SO Terakhir (Bar)</h3>
-                <div class="history-list" id="history-so-list"></div>
-            </section>
-
-            <!-- ESTIMASI PENGORDERAN -->
-            <section id="view-estimasi" class="view" style="display: none;">
-                <h2 class="section-title">Estimasi Pengorderan</h2>
-                <p class="helper-text">Total Aktual (Backroom + Bar) vs Sales 30 Hari.</p>
-                <div id="estimasi-list"></div>
-            </section>
-
-            <!-- MANAGER -->
-            <section id="view-manager" class="view" style="display: none;">
-                <h2 class="section-title">Manager Panel</h2>
-                <div class="manager-menu">
-                    <button class="btn-outline" onclick="app.openModal('modal-stock-awal')">Stock Awal (Baseline)</button>
-                    <button class="btn-outline" onclick="app.openModal('modal-sales')">Update Sales 30 Hari</button>
-                    <button class="btn-outline" onclick="app.exportData()">Export Data (JSON)</button>
-                    <button class="btn-danger" onclick="app.resetSystem()">Reset System</button>
-                </div>
-            </section>
-        </main>
-
-        <!-- BOTTOM NAV -->
-        <nav class="bottom-nav">
-            <a href="#dashboard" class="nav-item active" onclick="app.switchView('dashboard')"><span>Dash</span></a>
-            <a href="#in" class="nav-item" onclick="app.switchView('in')"><span>IN</span></a>
-            <a href="#out" class="nav-item" onclick="app.switchView('out')"><span>OUT</span></a>
-            <a href="#so" class="nav-item nav-so" onclick="app.switchView('so')"><span class="logo-kk-small">♥</span><span>SO</span></a>
-            <a href="#estimasi" class="nav-item" onclick="app.switchView('estimasi')"><span>Order</span></a>
-            <a href="#manager" class="nav-item" onclick="app.switchView('manager')"><span>Mgr</span></a>
-        </nav>
-    </div>
-
-    <!-- MODALS -->
-    <div class="modal-overlay" id="modal-overlay" style="display: none;" onclick="app.closeAllModals()"></div>
-    
-    <div class="modal" id="modal-in" style="display: none;">
-        <h3>Barang Masuk (Backroom)</h3>
-        <select id="in-item" onchange="app.checkCategory('in')"></select>
-        <input type="number" id="in-qty" placeholder="Qty Masuk">
-        <div id="in-batch-group" style="display: none;">
-            <input type="date" id="in-exp" placeholder="Expiry Date">
-        </div>
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-in')">Batal</button>
-            <button class="btn-primary" onclick="app.submitIn()">Simpan IN</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-out" style="display: none;">
-        <h3>Barang Keluar (Dari Backroom)</h3>
-        <select id="out-item"></select>
-        <input type="number" id="out-qty" placeholder="Qty Keluar">
-        <input type="text" id="out-detail" placeholder="Detail (Cth: Ke Bar, Terjual, Terpakai)">
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-out')">Batal</button>
-            <button class="btn-primary" onclick="app.submitOut()">Simpan OUT</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-so" style="display: none;">
-        <h3>Input Daily SO (Sisa Bar)</h3>
-        <select id="so-item"></select>
-        <input type="number" id="so-qty" placeholder="Qty Aktual di Bar">
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-so')">Batal</button>
-            <button class="btn-primary" onclick="app.submitSo()">Simpan SO</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-stock-awal" style="display: none;">
-        <h3>Stock Awal (Baseline)</h3>
-        <p class="helper-text">Fitur baseline backroom aktif. Gunakan tombol reset atau export/import data dari sistem.</p>
-        <div class="modal-actions">
-            <button class="btn-primary" onclick="app.closeModal('modal-stock-awal')">Tutup</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-sales" style="display: none;">
-        <h3>Update Sales 30 Hari</h3>
-        <p class="helper-text">Pengaturan data penjualan harian dan buffer per item.</p>
-        <div class="modal-actions">
-            <button class="btn-primary" onclick="app.closeModal('modal-sales')">Tutup</button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
-            </section>
-
-            <!-- IN -->
-            <section id="view-in" class="view" style="display: none;">
-                <h2 class="section-title">Barang Masuk (IN)</h2>
-                <p class="helper-text">Menambah stok Backroom dari Gudang/Vendor.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="app.openModal('modal-in')">+ Barang Masuk</button>
-                </div>
-                <h3>History IN</h3>
-                <div class="history-list" id="history-in-list"></div>
-            </section>
-
-            <!-- OUT -->
-            <section id="view-out" class="view" style="display: none;">
-                <h2 class="section-title">Barang Keluar (OUT)</h2>
-                <p class="helper-text">Mengeluarkan barang dari Backroom (ke Bar, Terjual, atau Terpakai). FEFO berlaku untuk Raw Material.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="app.openModal('modal-out')">+ Catat OUT</button>
-                </div>
-                <h3>History OUT</h3>
-                <div class="history-list" id="history-out-list"></div>
-            </section>
-
-            <!-- DAILY SO -->
-            <section id="view-so" class="view" style="display: none;">
-                <h2 class="section-title">Daily SO</h2>
-                <p class="helper-text">Menghitung fisik sisa barang di Bar. Digabungkan dengan sisa Backroom untuk Estimasi Order.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary btn-so" onclick="app.openModal('modal-so')">+ Input Daily SO (Bar)</button>
-                </div>
-                <h3>SO Terakhir (Bar)</h3>
-                <div class="history-list" id="history-so-list"></div>
-            </section>
-
-            <!-- ESTIMASI PENGORDERAN -->
-            <section id="view-estimasi" class="view" style="display: none;">
-                <h2 class="section-title">Estimasi Pengorderan</h2>
-                <p class="helper-text">Total Aktual (Backroom + Bar) vs Sales 30 Hari. Susu/Whipping = 7 Hari, Lainnya = 14 Hari.</p>
-                <div id="estimasi-list"></div>
-            </section>
-
-            <!-- MANAGER -->
-            <section id="view-manager" class="view" style="display: none;">
-                <h2 class="section-title">Manager Panel</h2>
-                <div class="manager-menu">
-                    <button class="btn-outline" onclick="app.openModal('modal-stock-awal')">Stock Awal (Baseline)</button>
-                    <button class="btn-outline" onclick="app.openModal('modal-sales')">Update Sales 30 Hari</button>
-                    <button class="btn-outline" onclick="app.exportData()">Export Data (JSON)</button>
-                    <button class="btn-danger" onclick="app.resetSystem()">Reset System</button>
-                </div>
-            </section>
-        </main>
-
-        <!-- BOTTOM NAV -->
-        <nav class="bottom-nav">
-            <a href="#dashboard" class="nav-item active" onclick="app.switchView('dashboard')"><span>Dash</span></a>
-            <a href="#in" class="nav-item" onclick="app.switchView('in')"><span>IN</span></a>
-            <a href="#out" class="nav-item" onclick="app.switchView('out')"><span>OUT</span></a>
-            <a href="#so" class="nav-item nav-so" onclick="app.switchView('so')"><span class="logo-kk-small">♥</span><span>SO</span></a>
-            <a href="#estimasi" class="nav-item" onclick="app.switchView('estimasi')"><span>Order</span></a>
-            <a href="#manager" class="nav-item" onclick="app.switchView('manager')"><span>Mgr</span></a>
-        </nav>
-    </div>
-
-    <!-- MODALS -->
-    <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
-    
-    <div class="modal" id="modal-in" style="display: none;">
-        <h3>Barang Masuk (Backroom)</h3>
-        <select id="in-item" onchange="app.checkCategory('in')"></select>
-        <input type="number" id="in-qty" placeholder="Qty Masuk">
-        <div id="in-batch-group" style="display: none;">
-            <input type="date" id="in-exp" placeholder="Expiry Date">
-        </div>
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-in')">Batal</button>
-            <button class="btn-primary" onclick="app.submitIn()">Simpan IN</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-out" style="display: none;">
-        <h3>Barang Keluar (Dari Backroom)</h3>
-        <select id="out-item"></select>
-        <input type="number" id="out-qty" placeholder="Qty Keluar">
-        <input type="text" id="out-detail" placeholder="Detail (Cth: Ke Bar, Terjual, Terpakai)">
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-out')">Batal</button>
-            <button class="btn-primary" onclick="app.submitOut()">Simpan OUT</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-so" style="display: none;">
-        <h3>Input Daily SO (Sisa Bar)</h3>
-        <select id="so-item"></select>
-        <input type="number" id="so-qty" placeholder="Qty Aktual di Bar">
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-so')">Batal</button>
-            <button class="btn-primary" onclick="app.submitSo()">Simpan SO</button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
-                <h3 class="category-title">RAW MATERIAL</h3>
-                <div id="dash-raw-material"></div>
-                
-                <h3 class="category-title mt-4">MERCHANDISE</h3>
-                <div id="dash-merchandise"></div>
-
-                <h3 class="category-title mt-4">KITCHEN SUPPLIER</h3>
-                <div id="dash-kitchen"></div>
-            </section>
-
-            <!-- IN -->
-            <section id="view-in" class="view" style="display: none;">
-                <h2 class="section-title">Barang Masuk (IN)</h2>
-                <p class="helper-text">Menambah stok Backroom dari Gudang/Vendor.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="app.openModal('modal-in')">+ Barang Masuk</button>
-                </div>
-                <h3>History IN</h3>
-                <div class="history-list" id="history-in-list"></div>
-            </section>
-
-            <!-- OUT -->
-            <section id="view-out" class="view" style="display: none;">
-                <h2 class="section-title">Barang Keluar (OUT)</h2>
-                <p class="helper-text">Mengeluarkan barang dari Backroom (ke Bar, Terjual, atau Terpakai). FEFO berlaku untuk Raw Material.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary" onclick="app.openModal('modal-out')">+ Catat OUT</button>
-                </div>
-                <h3>History OUT</h3>
-                <div class="history-list" id="history-out-list"></div>
-            </section>
-
-            <!-- DAILY SO -->
-            <section id="view-so" class="view" style="display: none;">
-                <h2 class="section-title">Daily SO</h2>
-                <p class="helper-text">Menghitung fisik sisa barang di Bar. Digabungkan dengan sisa Backroom untuk Estimasi Order.</p>
-                <div class="action-buttons">
-                    <button class="btn-primary btn-so" onclick="app.openModal('modal-so')">+ Input Daily SO (Bar)</button>
-                </div>
-                <h3>SO Terakhir (Bar)</h3>
-                <div class="history-list" id="history-so-list"></div>
-            </section>
-
-            <!-- ESTIMASI PENGORDERAN -->
-            <section id="view-estimasi" class="view" style="display: none;">
-                <h2 class="section-title">Estimasi Pengorderan</h2>
-                <p class="helper-text">Total Aktual (Backroom + Bar) vs Sales 30 Hari. Susu/Whipping = 7 Hari, Lainnya = 14 Hari.</p>
-                <div id="estimasi-list"></div>
-            </section>
-
-            <!-- MANAGER -->
-            <section id="view-manager" class="view" style="display: none;">
-                <h2 class="section-title">Manager Panel</h2>
-                <div class="manager-menu">
-                    <button class="btn-outline" onclick="app.openModal('modal-stock-awal')">Stock Awal (Baseline)</button>
-                    <button class="btn-outline" onclick="app.openModal('modal-sales')">Update Sales 30 Hari</button>
-                    <button class="btn-outline" onclick="app.exportData()">Export Data (JSON)</button>
-                    <button class="btn-danger" onclick="app.resetSystem()">Reset System</button>
-                </div>
-            </section>
-        </main>
-
-        <!-- BOTTOM NAV -->
-        <nav class="bottom-nav">
-            <a href="#dashboard" class="nav-item active" onclick="app.switchView('dashboard')"><span>Dash</span></a>
-            <a href="#in" class="nav-item" onclick="app.switchView('in')"><span>IN</span></a>
-            <a href="#out" class="nav-item" onclick="app.switchView('out')"><span>OUT</span></a>
-            <a href="#so" class="nav-item nav-so" onclick="app.switchView('so')"><span class="logo-kk-small">♥</span><span>SO</span></a>
-            <a href="#estimasi" class="nav-item" onclick="app.switchView('estimasi')"><span>Order</span></a>
-            <a href="#manager" class="nav-item" onclick="app.switchView('manager')"><span>Mgr</span></a>
-        </nav>
-    </div>
-
-    <!-- MODALS -->
-    <div class="modal-overlay" id="modal-overlay" style="display: none;"></div>
-    
-    <div class="modal" id="modal-in" style="display: none;">
-        <h3>Barang Masuk (Backroom)</h3>
-        <select id="in-item" onchange="app.checkCategory('in')"></select>
-        <input type="number" id="in-qty" placeholder="Qty Masuk">
-        <div id="in-batch-group" style="display: none;">
-            <input type="date" id="in-exp" placeholder="Expiry Date">
-        </div>
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-in')">Batal</button>
-            <button class="btn-primary" onclick="app.submitIn()">Simpan IN</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-out" style="display: none;">
-        <h3>Barang Keluar (Dari Backroom)</h3>
-        <select id="out-item"></select>
-        <input type="number" id="out-qty" placeholder="Qty Keluar">
-        <input type="text" id="out-detail" placeholder="Detail (Cth: Ke Bar, Terjual, Terpakai)">
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-out')">Batal</button>
-            <button class="btn-primary" onclick="app.submitOut()">Simpan OUT</button>
-        </div>
-    </div>
-
-    <div class="modal" id="modal-so" style="display: none;">
-        <h3>Input Daily SO (Sisa Bar)</h3>
-        <select id="so-item"></select>
-        <input type="number" id="so-qty" placeholder="Qty Aktual di Bar">
-        <div class="modal-actions">
-            <button class="btn-outline" onclick="app.closeModal('modal-so')">Batal</button>
-            <button class="btn-primary" onclick="app.submitSo()">Simpan SO</button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
-  </nav>
-
-  <main id="content"></main>
-
-</div>
-
-<!-- Modal root -->
-<div id="modalRoot"></div>
-
-<script src="app.js"></script>
 </body>
 </html>
